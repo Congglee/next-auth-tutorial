@@ -2,21 +2,43 @@ import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
 import prisma from "@/lib/prisma";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { getUserByById } from "@/data/user";
+import { getUserById } from "@/data/user";
 
 // * auth.ts is the file that use prisma adapter which can not be used in the edge environment
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/error",
+  },
+  // Events are asynchronous functions that do not return a response, they are useful for audit logs / reporting or handling any other side-effects.
+  events: {
+    // Sent when an account in a given provider is linked to a user in our user database. For example, when a user signs up with Twitter or when an existing user links their Google account.
+    async linkAccount({ user }) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
+      });
+    },
+  },
+  // Callbacks are asynchronous functions you can use to control what happens when an auth-related action is performed. Callbacks allow you to implement access controls without a database or to integrate with external databases or APIs.
   callbacks: {
-    async signIn({ user }) {
-      const existingUser = await getUserByById(user.id as string);
+    // Controls whether a user is allowed to sign in or not. Returning true continues the sign-in flow.
+    async signIn({ user, account }) {
+      if (account?.provider !== "credentials") {
+        return true;
+      }
 
-      if (!existingUser || !existingUser.emailVerified) {
+      const existingUser = await getUserById(user.id as string);
+
+      if (!existingUser) {
+        // Returning false or throwing an error will stop the sign-in flow and redirect the user to the error page.
         return false;
       }
 
       return true;
     },
+    // This callback is called whenever a session is checked. (i.e. when invoking the /api/session endpoint, using useSession or getSession)
     async session({ token, session }) {
       if (token.sub && session.user) {
         session.user.id = token.sub;
@@ -25,8 +47,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (token.role && session.user) {
         session.user.role = token.role;
       }
+
+      // The return value will be exposed to the client, so be careful what you return here!
+      // If you want to make anything available to the client which you've added to the token through the JWT callback, you have to explicitly return it here as well.
       return session;
     },
+    // This callback is called whenever a JSON Web Token is created (i.e. at sign in) or updated (i.e whenever a session is accessed in the client).
     async jwt({ token }) {
       // User is logged out
       if (!token.sub) {
@@ -34,7 +60,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return token;
       }
 
-      const existingUser = await getUserByById(token.sub);
+      const existingUser = await getUserById(token.sub);
 
       if (!existingUser) {
         return token;
@@ -42,10 +68,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       // Attach user role to the token to pass it to the session callback above
       token.role = existingUser.role;
+
+      // Anything you return here will be saved in the JWT and forwarded to the session callback
       return token;
     },
   },
   adapter: PrismaAdapter(prisma),
+  // Configure your session like if you want to use JWT or a database, how long until an idle session expires, or to throttle write operations in case you are using a database.
   session: { strategy: "jwt" },
   ...authConfig,
 });

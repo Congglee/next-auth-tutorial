@@ -3,12 +3,24 @@ import { getUserByEmail } from "@/data/user";
 import { LoginSchema } from "@/schemas";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Github from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 
 // * auth.config.ts is the file that can be used in the edge environment
 
 export default {
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+    Github({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+    // The Credentials provider allows you to handle signing in with arbitrary credentials, such as a username and password, domain, or two factor authentication or hardware device (e.g. YubiKey U2F / FIDO).
     Credentials({
+      // Gives full control over how you handle the credentials received from the user.
       async authorize(credentials) {
         const validatedFields = LoginSchema.safeParse(credentials);
 

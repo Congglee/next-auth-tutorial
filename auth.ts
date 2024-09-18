@@ -31,10 +31,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       const existingUser = await getUserById(user.id as string);
 
-      if (!existingUser) {
+      // Prevent user from signing in if email is not verified
+      if (!existingUser?.emailVerified) {
         // Returning false or throwing an error will stop the sign-in flow and redirect the user to the error page.
         return false;
       }
+
+      // TODO: Add 2FA check here
 
       return true;
     },

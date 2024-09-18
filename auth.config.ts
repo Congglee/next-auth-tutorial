@@ -4,6 +4,8 @@ import { LoginSchema } from "@/schemas";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
+// * auth.config.ts is the file that can be used in the edge environment
+
 export default {
   providers: [
     Credentials({

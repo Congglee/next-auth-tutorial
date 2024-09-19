@@ -51,7 +51,7 @@ export default function LoginForm() {
       login(data, callbackUrl)
         .then((data) => {
           if (data?.error) {
-            form.reset();
+            // form.reset();
             setError(data?.error);
           }
 

@@ -29,10 +29,15 @@ export default function Home() {
           className="mx-auto"
         />
         <p className="text-white text-lg">A simple authentication service</p>
-        <div>
+        <div className="flex flex-col gap-4">
           <LoginButton mode="modal" asChild>
-            <Button variant="secondary" size="lg">
-              Sign In
+            <Button variant="secondary" className="w-full">
+              Sign In with Dialog Modal
+            </Button>
+          </LoginButton>
+          <LoginButton asChild>
+            <Button variant="secondary" className="w-full">
+              Sign In at the Login Page
             </Button>
           </LoginButton>
         </div>

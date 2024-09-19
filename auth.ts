@@ -3,6 +3,7 @@ import authConfig from "@/auth.config";
 import prisma from "@/lib/prisma";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { getUserById } from "@/data/user";
+import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
 
 // * auth.ts is the file that use prisma adapter which can not be used in the edge environment
 
@@ -38,6 +39,20 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       }
 
       // TODO: Add 2FA check here
+      if (existingUser.isTwoFactorEnabled) {
+        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
+          existingUser.id
+        );
+
+        if (!twoFactorConfirmation) {
+          return false;
+        }
+
+        // Delete two factor confirmation for next sign in
+        await prisma.twoFactorConfirmation.delete({
+          where: { id: twoFactorConfirmation.id },
+        });
+      }
 
       return true;
     },

@@ -2,6 +2,7 @@ import LoginButton from "@/components/auth/login-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Poppins } from "next/font/google";
+import Image from "next/image";
 
 const font = Poppins({
   subsets: ["latin"],
@@ -18,8 +19,15 @@ export default function Home() {
             font.className
           )}
         >
-          🔐 Auth
+          Next Auth
         </h1>
+        <Image
+          src="/logo-sm.png"
+          alt="Next Auth Logo"
+          width={180}
+          height={180}
+          className="mx-auto"
+        />
         <p className="text-white text-lg">A simple authentication service</p>
         <div>
           <LoginButton>

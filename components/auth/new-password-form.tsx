@@ -1,7 +1,6 @@
 "use client";
 
 import { newPassword } from "@/actions/new-password";
-import { reset } from "@/actions/reset";
 import CardWrapper from "@/components/auth/card-wrapper";
 import FormError from "@/components/form-error";
 import FormSuccess from "@/components/form-success";

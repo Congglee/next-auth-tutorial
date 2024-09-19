@@ -4,6 +4,7 @@ import { DefaultSession } from "next-auth";
 // Add type definitions for the user object in the session
 export type ExtendedUser = DefaultSession["user"] & {
   role: UserRole;
+  isTwoFactorEnabled: boolean;
 };
 
 // Extend the session object to include the user object

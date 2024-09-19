@@ -66,6 +66,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.role = token.role;
       }
 
+      if (session.user) {
+        session.user.isTwoFactorEnabled = token.isTwoFactorEnabled as boolean;
+      }
+
       // The return value will be exposed to the client, so be careful what you return here!
       // If you want to make anything available to the client which you've added to the token through the JWT callback, you have to explicitly return it here as well.
       return session;
@@ -86,6 +90,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       // Attach user role to the token to pass it to the session callback above
       token.role = existingUser.role;
+      token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
 
       // Anything you return here will be saved in the JWT and forwarded to the session callback
       return token;

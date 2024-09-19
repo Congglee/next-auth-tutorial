@@ -14,9 +14,12 @@ import { AuthError } from "next-auth";
 import * as z from "zod";
 import prisma from "@/lib/prisma";
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
-import bcrypt from "bcryptjs";
+// import bcrypt from "bcryptjs";
 
-export const login = async (values: z.infer<typeof LoginSchema>) => {
+export const login = async (
+  values: z.infer<typeof LoginSchema>,
+  callbackUrl?: string | null
+) => {
   const validatedFields = LoginSchema.safeParse(values);
 
   if (!validatedFields.success) {
@@ -108,7 +111,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: DEFAULT_LOGIN_REDIRECT,
+      redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
   } catch (error) {
     if (error instanceof AuthError) {

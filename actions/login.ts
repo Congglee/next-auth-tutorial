@@ -14,6 +14,7 @@ import { AuthError } from "next-auth";
 import * as z from "zod";
 import prisma from "@/lib/prisma";
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
+import bcrypt from "bcryptjs";
 
 export const login = async (values: z.infer<typeof LoginSchema>) => {
   const validatedFields = LoginSchema.safeParse(values);
@@ -84,6 +85,16 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
         data: { userId: existingUser.id },
       });
     } else {
+      // This code block prevents mail from being sent if the user enter the wrong password
+      // const passwordsMatch = await bcrypt.compare(
+      //   values.password,
+      //   existingUser.password
+      // );
+
+      // if (!passwordsMatch) {
+      //   return { error: "Incorrect password!" };
+      // }
+
       // If the user has an email but no code, generate a new two factor token
       // And send it to the user
       const twoFactorToken = await generateTwoFactorToken(existingUser.email);
@@ -100,7 +111,6 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
       redirectTo: DEFAULT_LOGIN_REDIRECT,
     });
   } catch (error) {
-    // TODO
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":

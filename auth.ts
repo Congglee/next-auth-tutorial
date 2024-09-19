@@ -4,10 +4,11 @@ import prisma from "@/lib/prisma";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { getUserById } from "@/data/user";
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
+import { getAccountByUserId } from "@/data/account";
 
 // * auth.ts is the file that use prisma adapter which can not be used in the edge environment
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
@@ -38,7 +39,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return false;
       }
 
-      // TODO: Add 2FA check here
       if (existingUser.isTwoFactorEnabled) {
         const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
           existingUser.id
@@ -70,6 +70,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.isTwoFactorEnabled = token.isTwoFactorEnabled as boolean;
       }
 
+      if (session.user) {
+        session.user.name = token.name;
+        session.user.email = token.email as string;
+        session.user.isOAuth = token.isOAuth as boolean;
+      }
+
       // The return value will be exposed to the client, so be careful what you return here!
       // If you want to make anything available to the client which you've added to the token through the JWT callback, you have to explicitly return it here as well.
       return session;
@@ -88,7 +94,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return token;
       }
 
-      // Attach user role to the token to pass it to the session callback above
+      const existingAccount = await getAccountByUserId(existingUser.id);
+
+      // Attach user data to the token to pass it to the session callback above
+      token.isOAuth = !!existingAccount;
+      token.name = existingUser.name;
+      token.email = existingUser.email;
       token.role = existingUser.role;
       token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
 

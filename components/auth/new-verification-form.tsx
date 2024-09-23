@@ -17,6 +17,7 @@ export default function NewVerificationForm() {
 
   const onSubmit = useCallback(() => {
     if (success || error) {
+      return;
     }
 
     if (!token) {
